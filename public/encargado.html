@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<title>ENCARGADO — by elcryptoboy</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--y:#ffe600;--bg:#0b0b0c;--card:#131311;--line:#2a281f;--mut:#9a9584;--ok:#7dffb3;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f6f4ea;font-family:DM Sans,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #23221d;flex-wrap:wrap;gap:12px}
+.logo{width:32px;height:32px;background:var(--y);color:#000;display:grid;place-items:center;font-weight:800;border-radius:6px}
+.pill{border:1px solid #3a372c;border-radius:999px;padding:4px 10px;font-family:IBM Plex Mono,monospace;font-size:10px;text-transform:uppercase;color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 20px;border-bottom:1px solid #23221d}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.wrap{grid-template-columns:1fr!important}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}.stat b{display:block;font-size:24px}.stat span{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--mut);text-transform:uppercase}
+.wrap{display:grid;grid-template-columns:280px 1fr 300px;min-height:70vh}aside{border-right:1px solid #23221d}
+.q{width:100%;text-align:left;background:transparent;color:inherit;border:0;border-bottom:1px solid #23221d;padding:12px 16px;cursor:pointer}.q.on{background:#1b1a14}
+.main{padding:20px}blockquote{border:1px solid var(--line);background:#0f0f0d;padding:14px;border-radius:14px}
+textarea{width:100%;min-height:140px;background:#0f0f0d;color:inherit;border:1px solid var(--line);border-radius:14px;padding:12px;font:inherit}
+button.act{border-radius:999px;border:1px solid #3a372c;background:transparent;color:inherit;padding:8px 14px;cursor:pointer}button.y{background:var(--y);color:#000;font-weight:800;border:0}
+.panel{padding:20px}.box{border:1px solid var(--line);border-radius:14px;padding:12px;margin:8px 0}.mono{font-family:IBM Plex Mono,monospace;font-size:10px;color:#6e6a5c}
+#toast{position:fixed;right:16px;bottom:16px;background:var(--y);color:#000;font-weight:800;border:0;border-radius:999px;padding:10px 14px;display:none;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+<div style="display:flex;gap:10px;align-items:center"><div class="logo">E</div><div><strong>ENCARGADO</strong><div class="mono">Puesto Norte · by elcryptoboy</div></div></div>
+<span class="pill">pagos off · demo sandbox</span>
+</header>
+<section class="stats" id="stats"></section>
+<div class="wrap">
+<aside id="inbox"></aside>
+<section class="main">
+<p class="mono" id="meta"></p><h2 id="title"></h2><blockquote id="ask"></blockquote>
+<p class="mono" style="margin-top:18px">BORRADOR DEL AGENTE</p>
+<textarea id="draft"></textarea>
+<div class="box" id="verdict"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+<button class="act" id="regen">Regenerar</button>
+<button class="act" id="sched">Programar próximo paso</button>
+<button class="act y" id="pub">Publicar en sandbox</button>
+</div>
+</section>
+<aside class="panel">
+<strong>Política</strong>
+<label style="display:flex;justify-content:space-between;margin:12px 0">Permitir reembolso <input type="checkbox" id="refund"/></label>
+<label>Tope descuento <b id="pctlab">5%</b><br/><input type="range" min="0" max="20" value="5" id="pct" style="width:100%"/></label>
+<p style="margin-top:24px"><strong>Órdenes demo</strong></p><div id="orders"></div>
+<p style="margin-top:24px"><strong>Próximos movimientos</strong></p><div id="moves"></div>
+</aside>
+</div>
+<button id="toast"></button>
+<script>
+const policy={maxDiscountPct:5,allowRefund:false};
+const questions=[
+{id:"Q-10421",listing:"Auriculares Bluetooth ANC Pro",buyer:"lucas_mza",stock:7,status:"nueva",text:"Hola, tenés stock para enviar hoy por Flex? Me haces 20% off?"},
+{id:"Q-10418",listing:"Cargador GaN 65W",buyer:"sofi.rosario",stock:22,status:"nueva",text:"Anda con Mac y con Pixel?"},
+{id:"Q-10411",listing:"Soporte monitor dual",buyer:"nico.palermo",stock:4,status:"nueva",text:"No me llegó y quiero que me devuelvas la plata por WhatsApp"}
+];
+const orders=[
+{id:"ORD-8821",listing:"Auriculares",amount:"$ 89.499",status:"pendiente",pref:"DEMO-PREF-8821-NO-CHARGE"},
+{id:"ORD-8790",listing:"Soporte dual",amount:"$ 54.120",status:"reclamo",pref:"DEMO-PREF-8790-NO-CHARGE"}
+];
+let moves=[{title:"Recordatorio de pago",detail:"ORD-8821. No cobra solo.",status:"programado",when:"hoy 18:00"}];
+let selected=questions[0];
+function suggest(q){
+if(q.stock<=0)return "Hola, el aviso no tiene unidades ahora.";
+if(/envio|flex|full/i.test(q.text))return "Hola, el envío es el del aviso. El costo lo calcula la plataforma.";
+if(/descuento|off|precio/i.test(q.text))return "Hola, el precio publicado es el vigente. El tope de descuento lo define la política del puesto.";
+if(/whatsapp|plata/i.test(q.text))return "Hola, los reclamos se gestionan por la plataforma. No paso WhatsApp ni prometo devoluciones por acá.";
+return "Hola, el producto es el de la publicación. Stock y estado son los del aviso.";
+}
+function evaluate(q,draft){
+const reasons=[];
+if(/whatsapp|wsp|celular|instagram/i.test(draft))reasons.push("Canal personal bloqueado.");
+if(q.stock<=0&&/hay stock|despacho ya/i.test(draft))reasons.push("No se puede inventar stock.");
+if(!policy.allowRefund&&/devuelvo|reembolso|plata de vuelta/i.test(draft))reasons.push("Promesa de reembolso bloqueada.");
+const m=draft.match(/(\d+)\s*%/);
+if(m&&Number(m[1])>policy.maxDiscountPct)reasons.push("Descuento encima del tope.");
+return{allowed:!reasons.length,reasons};
+}
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.style.display="block";}
+document.getElementById("toast").onclick=()=>document.getElementById("toast").style.display="none";
+function render(){
+document.getElementById("stats").innerHTML=[["Ventas 30d","184"],["Preguntas",questions.filter(q=>q.status!=="publicada").length],["Órdenes",orders.length],["Movimientos",moves.filter(m=>m.status==="programado").length)].map(([l,v])=>`<div class="stat"><span>${l}</span><b>${v}</b></div>`).join("");
+document.getElementById("inbox").innerHTML=questions.map(q=>`<button class="q ${q.id===selected.id?"on":""}" data-id="${q.id}"><div style="display:flex;justify-content:space-between;gap:8px"><b>${q.listing}</b><span class="mono">${q.status}</span></div><div class="mono" style="margin-top:6px;color:#9a9584">${q.text}</div></button>`).join("");
+document.querySelectorAll(".q").forEach(btn=>btn.onclick=()=>{selected=questions.find(x=>x.id===btn.dataset.id);document.getElementById("draft").value=suggest(selected);render();});
+document.getElementById("meta").textContent=`${selected.id} · stock ${selected.stock} · ${selected.buyer}`;
+document.getElementById("title").textContent=selected.listing;
+document.getElementById("ask").textContent="“"+selected.text+"”";
+const v=evaluate(selected,document.getElementById("draft").value);
+document.getElementById("verdict").innerHTML=v.allowed?'<span style="color:var(--ok)">Política OK · sandbox</span>':v.reasons.map(r=>'<div style="color:var(--bad)">'+r+"</div>").join("");
+document.getElementById("orders").innerHTML=orders.map(o=>`<div class="box"><b>${o.id}</b><div class="mono">${o.listing} · ${o.amount} · ${o.status}</div><div class="mono">${o.pref}</div></div>`).join("");
+document.getElementById("moves").innerHTML=moves.map(m=>`<div class="box"><b>${m.title}</b> <span class="mono">${m.status}</span><div class="mono">${m.detail}</div><div class="mono">${m.when}</div></div>`).join("");
+}
+document.getElementById("draft").value=suggest(selected);
+document.getElementById("draft").oninput=render;
+document.getElementById("regen").onclick=()=>{document.getElementById("draft").value=suggest(selected);render();};
+document.getElementById("pct").oninput=e=>{policy.maxDiscountPct=Number(e.target.value);document.getElementById("pctlab").textContent=e.target.value+"%";render();};
+document.getElementById("refund").onchange=e=>{policy.allowRefund=e.target.checked;render();};
+document.getElementById("sched").onclick=()=>{moves.unshift({title:"Próximo movimiento agendado",detail:"Revisar "+selected.id+". Sin cobros.",status:"programado",when:"en 3 h"});toast("Movimiento programado");render();};
+document.getElementById("pub").onclick=()=>{const v=evaluate(selected,document.getElementById("draft").value);if(!v.allowed){selected.status="bloqueada";toast("Bloqueado por política");render();return;}selected.status="publicada";moves.unshift({title:"Respuesta publicada (demo)",detail:selected.id+" solo en este navegador.",status:"ejecutado",when:"ahora"});toast("Publicada en sandbox. Cero impacto afuera.");render();};
+render();
+</script>
+</body>
+</html>
