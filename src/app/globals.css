@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b0b0c;
+  --ink: #f6f4ea;
+  --muted: #9a9584;
+  --yellow: #ffe600;
+  --yellow-2: #ffd000;
+  --line: #23221d;
+  --card: #131311;
+  --ok: #7dffb3;
+  --bad: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--yellow);
+  color: #111;
+}
+
+.grid-noise {
+  background-image:
+    linear-gradient(to right, rgba(255, 230, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 230, 0, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.yellow-glow {
+  box-shadow: 0 0 0 1px rgba(255, 230, 0, 0.25), 0 20px 80px rgba(255, 230, 0, 0.12);
+}
